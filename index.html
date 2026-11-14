@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Admin Panel — Oylik Nazorati Live</title>
+  <title>Admin Panel — Oylik va Jamg'arma Nazorati</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
     <p class="text-sm font-semibold text-gray-600">Real-time baza yuklanmoqda...</p>
   </div>
 
-  <!-- RUXSAT YO'Q EKRANI (BEGONA KIRSA) -->
+  <!-- RUXSAT YO'Q EKRANI -->
   <div id="access-denied" class="hidden max-w-lg mx-auto px-4 py-20 text-center space-y-2">
     <div class="text-4xl">🔒</div>
     <h2 class="text-base font-extrabold text-gray-900">Kirish taqiqlangan</h2>
@@ -136,19 +136,19 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-blue-100 font-medium">Oylik tarqatish davri</p>
-            <h2 id="payout-period-title" class="text-lg font-extrabold mt-0.5">2026-10</h2>
+            <h2 id="payout-period-title" class="text-lg font-extrabold mt-0.5">2026-11</h2>
           </div>
           <div class="text-right">
-            <p class="text-xs text-blue-100">Jami beriladigan</p>
+            <p class="text-xs text-blue-100">Jami sof balans</p>
             <p id="payout-total-sum" class="text-base font-extrabold mt-0.5">0 so'm</p>
           </div>
         </div>
         <p class="text-[11px] text-blue-100 mt-2 leading-relaxed">
-          1-sanadan oxirgi sanagacha ishlagan kunlari hisoblanib, bugungacha olingan barcha avanslar ayiriladi.
+          To'liq bersangiz oy 0 balans bilan yopiladi. Qisman bersangiz (yoki qarz bo'lsa), qoldiq avtomatik keyingi oyga jamg'arma/qarz bo'lib o'tadi.
         </p>
       </div>
 
-      <div id="payout-workers-list" class="space-y-2.5"></div>
+      <div id="payout-workers-list" class="space-y-3"></div>
 
       <!-- ARXIV -->
       <div class="pt-2 space-y-3">
@@ -216,6 +216,33 @@
       </div>
       <button onclick="saveEditedSalary()" class="w-full bg-blue-600 text-white font-bold text-sm py-3 rounded-xl">
         💾 Yangi stavkani saqlash
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: QISMAN OYLIK BERISH / JAMG'ARMA VA QARZ O'TKAZISH -->
+  <div id="modal-partial-payout" class="fixed inset-0 bg-black/50 z-40 hidden items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-gray-900">💰 Oylik berish va Jamg'arish</h3>
+        <button onclick="closeModals()" class="text-gray-400 text-lg font-bold">✕</button>
+      </div>
+      <div class="bg-blue-50 p-3 rounded-xl text-xs space-y-1 border border-blue-100">
+        <p id="partial-worker-name" class="font-extrabold text-gray-900 text-sm"></p>
+        <p id="partial-total-due" class="font-bold text-blue-700"></p>
+      </div>
+      <input type="hidden" id="partial-worker-code" />
+      <input type="hidden" id="partial-total-due-val" />
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Qo'liga berilgan summa (so'm)</label>
+        <input type="number" id="partial-paid-input" oninput="updatePartialPreview()" placeholder="Masalan: 1500000 (yoki 0)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-extrabold" />
+        <p class="text-[11px] text-gray-400 mt-1">Agar xodimda qarz bo'lsa va pul berilmasa, 0 kiriting.</p>
+      </div>
+      <div id="partial-carryover-preview" class="p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700">
+        Keyingi oyga o'tadi: 0 so'm
+      </div>
+      <button onclick="confirmPartialPayout()" class="w-full bg-blue-600 text-white font-bold text-sm py-3 rounded-xl">
+        ✅ Tasdiqlash va Keyingi oyga o'tkazish
       </button>
     </div>
   </div>
@@ -359,6 +386,9 @@
       if (!w) return null;
 
       const baseSalary = Number(w.salary || 0);
+      // O'tgan oydan o'tgan jamg'arma (+) yoki qarz (-)
+      const carryoverBalance = Number(w.carryover_balance || 0);
+
       const now = new Date();
       const daysInCurMonth = getDaysInMonth(now.getFullYear(), now.getMonth());
       const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -387,6 +417,7 @@
         code,
         name: w.name,
         baseSalary,
+        carryoverBalance,
         startDate: w.start_date || getTodayStr(),
         isPaused: Boolean(w.is_paused),
         tgUserId: w.tg_user_id,
@@ -400,8 +431,8 @@
         payoutEarned,
         totalTaken,
         totalBonus,
-        currentBalance: (earnedCur + totalBonus) - totalTaken,
-        fullPayoutBalance: (payoutEarned + totalBonus) - totalTaken,
+        currentBalance: (carryoverBalance + earnedCur + totalBonus) - totalTaken,
+        fullPayoutBalance: (carryoverBalance + payoutEarned + totalBonus) - totalTaken,
         transactions: txs
       };
     }
@@ -441,11 +472,44 @@
       document.getElementById('modal-edit-salary').classList.add('flex');
     };
 
+    window.openPartialPayoutModal = (code) => {
+      const s = getWorkerSummary(code);
+      if (!s) return;
+      document.getElementById('partial-worker-code').value = code;
+      document.getElementById('partial-total-due-val').value = s.fullPayoutBalance;
+      document.getElementById('partial-worker-name').textContent = `👤 ${s.name}`;
+      document.getElementById('partial-total-due').textContent =
+        s.fullPayoutBalance >= 0
+          ? `Jami hisoblangan balans: +${fmt(s.fullPayoutBalance)} so'm`
+          : `Joriy qarzi: -${fmt(Math.abs(s.fullPayoutBalance))} so'm`;
+      document.getElementById('partial-paid-input').value = s.fullPayoutBalance > 0 ? '' : '0';
+      updatePartialPreview();
+      document.getElementById('modal-partial-payout').classList.remove('hidden');
+      document.getElementById('modal-partial-payout').classList.add('flex');
+    };
+
+    window.updatePartialPreview = () => {
+      const totalDue = Number(document.getElementById('partial-total-due-val').value || 0);
+      const paidNow = Number(document.getElementById('partial-paid-input').value || 0);
+      const nextCarryover = totalDue - paidNow;
+      const previewEl = document.getElementById('partial-carryover-preview');
+      if (nextCarryover > 0) {
+        previewEl.className = "p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700";
+        previewEl.textContent = `📦 Keyingi oyga jamg'arma o'tadi: +${fmt(nextCarryover)} so'm`;
+      } else if (nextCarryover < 0) {
+        previewEl.className = "p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700";
+        previewEl.textContent = `⚠️ Keyingi oyga qarz o'tadi: -${fmt(Math.abs(nextCarryover))} so'm`;
+      } else {
+        previewEl.className = "p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700";
+        previewEl.textContent = `✅ Keyingi oyga o'tadigan qoldiq: 0 so'm`;
+      }
+    };
+
     window.closeModals = () => {
-      document.getElementById('modal-add-worker').classList.add('hidden');
-      document.getElementById('modal-add-worker').classList.remove('flex');
-      document.getElementById('modal-edit-salary').classList.add('hidden');
-      document.getElementById('modal-edit-salary').classList.remove('flex');
+      ['modal-add-worker', 'modal-edit-salary', 'modal-partial-payout'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
+      });
     };
 
     window.createNewWorker = async () => {
@@ -464,6 +528,7 @@
         name,
         id_code: code,
         salary,
+        carryover_balance: 0,
         start_date: getTodayStr(),
         is_paused: false,
         tg_user_id: null,
@@ -560,28 +625,63 @@
       showToast(`✅ ${fmt(amount)} so'm saqlandi!`);
     };
 
-    window.payAndArchiveWorker = async (code) => {
+    // OYLIKNI YOPISH (TO'LIQ YOKI QISMAN/JAMG'ARMA/QARZ BILAN)
+    async function finalizeWorkerPayout(code, paidNow) {
       const s = getWorkerSummary(code);
       if (!s) return;
-      if (!confirm(`${s.name} uchun ${fmt(s.fullPayoutBalance)} so'm oylik berilganini tasdiqlaysizmi? Avanslar arxivga o'tadi.`)) return;
 
+      const nextCarryover = s.fullPayoutBalance - paidNow;
       const periodInfo = getPayoutPeriodInfo();
+      let noteText = `Oylik (${s.workedPayout} kun ishladi)`;
+      if (nextCarryover > 0) {
+        noteText += ` | Jamg'armaga o'tdi: +${fmt(nextCarryover)}`;
+      } else if (nextCarryover < 0) {
+        noteText += ` | Keyingi oyga qarz: -${fmt(Math.abs(nextCarryover))}`;
+      }
+
       await push(ref(db, 'salary_archive'), {
         worker_id_code: code,
         worker_name: s.name,
         base_salary: s.baseSalary,
+        prev_carryover: s.carryoverBalance,
         total_bonus: s.totalBonus,
         total_taken: s.totalTaken,
-        paid_amount: s.fullPayoutBalance,
+        paid_amount: paidNow,
+        next_carryover: nextCarryover,
         period_month: periodInfo.label,
-        note: `Oylik (${s.workedPayout} kun ishladi)`,
+        note: noteText,
         paid_date: getNowDateTimeStr()
       });
 
       for (const tx of s.transactions) {
         await update(ref(db, `reports/${tx.key}`), { is_archived: true });
       }
-      showToast(`✅ ${s.name} oyligi arxivga o'tkazildi!`);
+
+      await update(ref(db, `workers/${code}`), {
+        carryover_balance: nextCarryover
+      });
+    }
+
+    window.payFullWorker = async (code) => {
+      const s = getWorkerSummary(code);
+      if (!s) return;
+      const amountToPay = Math.max(0, s.fullPayoutBalance);
+      if (!confirm(`${s.name} uchun ${fmt(amountToPay)} so'm to'liq berilganini tasdiqlaysizmi?`)) return;
+      await finalizeWorkerPayout(code, amountToPay);
+      showToast(`✅ ${s.name} oyligi to'liq yopildi!`);
+    };
+
+    window.confirmPartialPayout = async () => {
+      const code = document.getElementById('partial-worker-code').value;
+      const rawVal = document.getElementById('partial-paid-input').value;
+      if (rawVal === '' || Number(rawVal) < 0) {
+        showToast("❌ Qo'liga berilgan summani kiriting (kamida 0)!");
+        return;
+      }
+      const paidNow = Number(rawVal);
+      await finalizeWorkerPayout(code, paidNow);
+      closeModals();
+      showToast("✅ Saqlandi va qoldiq keyingi oyga o'tkazildi!");
     };
 
     window.exportArchiveCSV = () => {
@@ -590,9 +690,9 @@
         showToast("📂 Arxiv bo'sh!");
         return;
       }
-      let csv = "\uFEFFDavr,Xodim Ismi,100% Stavka,Bonus,Olingan Avans,Qo'liga Berildi,Izoh,Sana\n";
+      let csv = "\uFEFFDavr,Xodim Ismi,100% Stavka,O'tgan Qoldiq,Bonus,Olingan Avans,Qo'liga Berildi,Keyingi Oyga O'tdi,Izoh,Sana\n";
       items.forEach(i => {
-        csv += `"${i.period_month || ''}","${i.worker_name || ''}",${i.base_salary || 0},${i.total_bonus || 0},${i.total_taken || 0},${i.paid_amount || 0},"${i.note || ''}","${i.paid_date || ''}"\n`;
+        csv += `"${i.period_month || ''}","${i.worker_name || ''}",${i.base_salary || 0},${i.prev_carryover || 0},${i.total_bonus || 0},${i.total_taken || 0},${i.paid_amount || 0},${i.next_carryover || 0},"${i.note || ''}","${i.paid_date || ''}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -628,13 +728,20 @@
         selectEl.appendChild(opt);
 
         const balColor = s.currentBalance >= 0 ? 'text-emerald-600' : 'text-rose-600';
-        const balLabel = s.currentBalance >= 0 ? `Qoldiq: ${fmt(s.currentBalance)} so'm` : `Qarz: ${fmt(Math.abs(s.currentBalance))} so'm`;
+        const balLabel = s.currentBalance >= 0 ? `Jami qoldiq: ${fmt(s.currentBalance)} so'm` : `Jami qarz: ${fmt(Math.abs(s.currentBalance))} so'm`;
+
+        let carryBadge = '';
+        if (s.carryoverBalance > 0) {
+          carryBadge = `<span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">📦 Jamg'arma: +${fmt(s.carryoverBalance)}</span>`;
+        } else if (s.carryoverBalance < 0) {
+          carryBadge = `<span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-100">⚠️ O'tgan qarz: -${fmt(Math.abs(s.carryoverBalance))}</span>`;
+        }
 
         listEl.innerHTML += `
           <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-3">
             <div class="flex items-start justify-between">
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-sm font-extrabold text-gray-900">${s.name}</span>
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${s.isPaused ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
                     ${s.isPaused ? '⏸ Pauzada' : '🟢 Ishlayapti'}
@@ -642,6 +749,7 @@
                   <span title="Telegram bildirishnoma">${s.tgUserId ? '🔔' : '🔕'}</span>
                 </div>
                 <p class="text-[11px] text-gray-500 mt-0.5">ID: <b class="text-gray-700 select-all">${code}</b> • Boshlagan: ${s.startDate}</p>
+                ${carryBadge ? `<div class="mt-1">${carryBadge}</div>` : ''}
               </div>
               <button onclick="deleteWorkerConfirm('${code}')" class="text-gray-400 hover:text-rose-500 text-xs p-1">🗑</button>
             </div>
@@ -703,6 +811,7 @@
         `;
       });
 
+      // Oylik tarqatish ro'yxati
       const pInfo = getPayoutPeriodInfo();
       document.getElementById('payout-period-title').textContent = `${pInfo.label} (${pInfo.daysInPeriod} kunlik oy)`;
       const payoutListEl = document.getElementById('payout-workers-list');
@@ -712,23 +821,40 @@
       codes.forEach(code => {
         const s = getWorkerSummary(code);
         if (s.fullPayoutBalance > 0) grandPayout += s.fullPayoutBalance;
+
+        let carryText = '';
+        if (s.carryoverBalance > 0) carryText = ` • Jamg'arma: +${fmt(s.carryoverBalance)}`;
+        else if (s.carryoverBalance < 0) carryText = ` • O'tgan qarz: -${fmt(Math.abs(s.carryoverBalance))}`;
+
         payoutListEl.innerHTML += `
-          <div class="bg-white p-3.5 rounded-2xl card-shadow border border-gray-100 flex items-center justify-between gap-2">
+          <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-2.5">
             <div>
               <p class="text-sm font-extrabold text-gray-900">${s.name}</p>
-              <p class="text-[11px] text-gray-500">Ishladi: ${s.workedPayout}/${s.daysInPeriod} kun • Olgan: ${fmt(s.totalTaken)}</p>
-              <p class="text-xs font-extrabold ${s.fullPayoutBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-0.5">
-                Qo'liga tegadi: ${fmt(s.fullPayoutBalance)} so'm
+              <p class="text-[11px] text-gray-500">Ishladi: ${s.workedPayout}/${s.daysInPeriod} kun • Olgan: ${fmt(s.totalTaken)}${carryText}</p>
+              <p class="text-xs font-extrabold ${s.fullPayoutBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-1">
+                ${s.fullPayoutBalance >= 0 ? `Jami sof balans: +${fmt(s.fullPayoutBalance)} so'm` : `Qarzi bor: -${fmt(Math.abs(s.fullPayoutBalance))} so'm`}
               </p>
             </div>
-            <button onclick="payAndArchiveWorker('${code}')" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl shrink-0">
-              💵 Berildi
-            </button>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              ${s.fullPayoutBalance > 0 ? `
+                <button onclick="payFullWorker('${code}')" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl">
+                  💵 To'liq (${fmt(s.fullPayoutBalance)})
+                </button>
+              ` : `
+                <button disabled class="bg-gray-100 text-gray-400 text-xs font-bold py-2 rounded-xl">
+                  💵 To'liq (0)
+                </button>
+              `}
+              <button onclick="openPartialPayoutModal('${code}')" class="bg-indigo-50 active:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold py-2 rounded-xl">
+                💰 Qisman / Jamg'arma
+              </button>
+            </div>
           </div>
         `;
       });
       document.getElementById('payout-total-sum').textContent = `${fmt(grandPayout)} so'm`;
 
+      // Arxiv ro'yxati
       const archEl = document.getElementById('archive-list');
       const archItems = Object.values(state.archive).sort((a, b) => (b.paid_date || '').localeCompare(a.paid_date || ''));
       archEl.innerHTML = archItems.length ? '' : `<div class="bg-white p-4 rounded-2xl text-center text-xs text-gray-400">Arxivda yozuvlar yo'q</div>`;
@@ -737,9 +863,9 @@
           <div class="bg-white p-3.5 rounded-2xl card-shadow border border-gray-100 text-xs space-y-1">
             <div class="flex justify-between font-bold">
               <span class="text-gray-900">${item.worker_name} <span class="text-blue-600">[${item.period_month || ''}]</span></span>
-              <span class="text-emerald-600">${fmt(item.paid_amount)} so'm</span>
+              <span class="text-emerald-600">Berildi: ${fmt(item.paid_amount)} so'm</span>
             </div>
-            <p class="text-[11px] text-gray-500">Stavka: ${fmt(item.base_salary)} • Olgan: ${fmt(item.total_taken)} • ${item.note || ''}</p>
+            <p class="text-[11px] text-gray-500">${item.note || ''}</p>
           </div>
         `;
       });
