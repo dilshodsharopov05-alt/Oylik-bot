@@ -54,7 +54,7 @@
   <div id="access-denied" class="hidden max-w-lg mx-auto px-4 py-20 text-center space-y-2">
     <div class="text-4xl">🔒</div>
     <h2 class="text-base font-extrabold text-gray-900">Kirish taqiqlangan</h2>
-    <p class="text-xs text-gray-500">Ushbu WebApp faqat administrator uchun mo'ljallangan.</p>
+    <p class="text-xs text-gray-500">Ushbu WebApp faqat administratorlar uchun mo'ljallangan.</p>
   </div>
 
   <!-- ==================== ADMIN PANEL ==================== -->
@@ -259,16 +259,21 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const ADMIN_ID = 1264738478;
+    const ADMIN_IDS = [1264738478, 7090331311]; // Dilshodbek va Anvar
     let isAuthorized = true;
+    let currentAdminName = "Dilshodbek";
 
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
       const tgUser = tg.initDataUnsafe?.user;
-      if (tgUser && tgUser.id !== ADMIN_ID) {
-        isAuthorized = false;
+      if (tgUser) {
+        if (!ADMIN_IDS.includes(tgUser.id)) {
+          isAuthorized = false;
+        } else if (tgUser.id === 7090331311) {
+          currentAdminName = "Anvar";
+        }
       }
     }
 
@@ -386,7 +391,6 @@
       if (!w) return null;
 
       const baseSalary = Number(w.salary || 0);
-      // O'tgan oydan o'tgan jamg'arma (+) yoki qarz (-)
       const carryoverBalance = Number(w.carryover_balance || 0);
 
       const now = new Date();
@@ -625,7 +629,6 @@
       showToast(`✅ ${fmt(amount)} so'm saqlandi!`);
     };
 
-    // OYLIKNI YOPISH (TO'LIQ YOKI QISMAN/JAMG'ARMA/QARZ BILAN)
     async function finalizeWorkerPayout(code, paidNow) {
       const s = getWorkerSummary(code);
       if (!s) return;
@@ -703,7 +706,7 @@
     };
 
     function renderAdmin() {
-      document.getElementById('header-subtitle').textContent = `Dilshodbek Sharopov • ${getTodayStr()}`;
+      document.getElementById('header-subtitle').textContent = `${currentAdminName} • ${getTodayStr()}`;
       const codes = Object.keys(state.workers);
       let activeCnt = 0, pausedCnt = 0, totalEarned = 0;
       const listEl = document.getElementById('workers-list');
@@ -811,7 +814,6 @@
         `;
       });
 
-      // Oylik tarqatish ro'yxati
       const pInfo = getPayoutPeriodInfo();
       document.getElementById('payout-period-title').textContent = `${pInfo.label} (${pInfo.daysInPeriod} kunlik oy)`;
       const payoutListEl = document.getElementById('payout-workers-list');
@@ -854,7 +856,6 @@
       });
       document.getElementById('payout-total-sum').textContent = `${fmt(grandPayout)} so'm`;
 
-      // Arxiv ro'yxati
       const archEl = document.getElementById('archive-list');
       const archItems = Object.values(state.archive).sort((a, b) => (b.paid_date || '').localeCompare(a.paid_date || ''));
       archEl.innerHTML = archItems.length ? '' : `<div class="bg-white p-4 rounded-2xl text-center text-xs text-gray-400">Arxivda yozuvlar yo'q</div>`;
