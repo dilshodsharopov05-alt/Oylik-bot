@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Admin Panel — Oylik va Jamg'arma Nazorati</title>
+  <title>Admin Panel — Labzak & Qoraqamish</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -27,22 +27,34 @@
 
   <!-- TOP HEADER -->
   <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3">
-    <div class="max-w-lg mx-auto flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
-          <h1 class="text-sm font-extrabold text-gray-900 tracking-tight">Oylik Nazorati • Admin</h1>
+    <div class="max-w-lg mx-auto space-y-2.5">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+            <h1 id="header-title" class="text-sm font-extrabold text-gray-900 tracking-tight">Oylik Nazorati</h1>
+          </div>
+          <p id="header-subtitle" class="text-[11px] text-gray-500 font-medium mt-0.5">Firebase ulanmoqda...</p>
         </div>
-        <p id="header-subtitle" class="text-[11px] text-gray-500 font-medium mt-0.5">Firebase ulanmoqda...</p>
+        <span id="role-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+          👨‍💼 Bosh Admin
+        </span>
       </div>
-      <span class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-        👨‍💼 Boshqaruv
-      </span>
+
+      <!-- FILIAL TANLASH -->
+      <div id="branch-switcher" class="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-xl">
+        <button id="br-btn-labzak" onclick="switchBranch('labzak')" class="py-1.5 rounded-lg text-xs font-extrabold bg-white text-blue-600 shadow-sm transition-all">
+          🏢 Labzak
+        </button>
+        <button id="br-btn-qoraqamish" onclick="switchBranch('qoraqamish')" class="py-1.5 rounded-lg text-xs font-bold text-gray-500 transition-all">
+          🏢 Qoraqamish
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- TOAST BILDIRISHNOMA -->
-  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden max-w-sm w-[92%] bg-gray-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl border border-gray-700 transition-all"></div>
+  <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden max-w-sm w-[92%] bg-gray-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl border border-gray-700 transition-all"></div>
 
   <!-- YUKLANISH EKRANI -->
   <div id="loading-screen" class="max-w-lg mx-auto px-4 py-20 text-center">
@@ -54,7 +66,7 @@
   <div id="access-denied" class="hidden max-w-lg mx-auto px-4 py-20 text-center space-y-2">
     <div class="text-4xl">🔒</div>
     <h2 class="text-base font-extrabold text-gray-900">Kirish taqiqlangan</h2>
-    <p class="text-xs text-gray-500">Ushbu WebApp faqat administratorlar uchun mo'ljallangan.</p>
+    <p class="text-xs text-gray-500">Ushbu WebApp faqat bosh administratorlar uchun mo'ljallangan.</p>
   </div>
 
   <!-- ==================== ADMIN PANEL ==================== -->
@@ -72,13 +84,13 @@
           <p id="stat-paused" class="text-lg font-extrabold text-amber-500 mt-0.5">0 ta</p>
         </div>
         <div class="bg-white p-3 rounded-2xl card-shadow border border-gray-100">
-          <p class="text-[11px] text-gray-500 font-medium">Joriy Fond</p>
-          <p id="stat-earned-total" class="text-sm font-extrabold text-blue-600 mt-1">0</p>
+          <p class="text-[10px] text-gray-500 font-semibold leading-tight">Shu kungacha beriladigan</p>
+          <p id="stat-earned-total" class="text-sm font-extrabold text-blue-600 mt-1">0 so'm</p>
         </div>
       </div>
 
       <div class="flex items-center justify-between">
-        <h2 class="text-sm font-bold text-gray-800">Xodimlar ro'yxati</h2>
+        <h2 id="workers-list-title" class="text-sm font-bold text-gray-800">Xodimlar ro'yxati</h2>
         <button onclick="openAddWorkerModal()" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm flex items-center gap-1.5">
           <span>➕</span> Yangi ishchi
         </button>
@@ -90,7 +102,7 @@
     <!-- TAB 2: PUL BERISH (AVANS / BONUS) -->
     <section id="tab-finance" class="hidden space-y-4">
       <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-3.5">
-        <h2 class="text-sm font-bold text-gray-800">💸 Pul berish (Avans / Bonus)</h2>
+        <h2 id="finance-title" class="text-sm font-bold text-gray-800">💸 Pul berish (Avans / Bonus)</h2>
 
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Xodimni tanlang</label>
@@ -132,28 +144,34 @@
 
     <!-- TAB 3: OYLIK TARQATISH VA ARXIV -->
     <section id="tab-payout" class="hidden space-y-4">
-      <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-md">
+      <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-md space-y-2">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs text-blue-100 font-medium">Oylik tarqatish davri</p>
+            <p id="payout-branch-label" class="text-xs text-blue-100 font-medium">Oylik tarqatish davri</p>
             <h2 id="payout-period-title" class="text-lg font-extrabold mt-0.5">2026-11</h2>
           </div>
           <div class="text-right">
-            <p class="text-xs text-blue-100">Jami sof balans</p>
-            <p id="payout-total-sum" class="text-base font-extrabold mt-0.5">0 so'm</p>
+            <p class="text-[11px] text-blue-100 font-medium">Oylikda jami ketgan pul</p>
+            <p id="payout-total-sum" class="text-base font-extrabold mt-0.5 text-emerald-300">0 so'm</p>
           </div>
         </div>
-        <p class="text-[11px] text-blue-100 mt-2 leading-relaxed">
-          To'liq bersangiz oy 0 balans bilan yopiladi. Qisman bersangiz (yoki qarz bo'lsa), qoldiq avtomatik keyingi oyga jamg'arma/qarz bo'lib o'tadi.
-        </p>
+        <div class="bg-white/15 px-3 py-1.5 rounded-xl text-[11px] font-bold text-amber-200 flex items-center gap-1.5">
+          <span>📅</span>
+          <span>Har oyning 1-sanasida oylik berish (Bugungacha yig'ilgan hisob)</span>
+        </div>
+        <div class="flex items-center justify-between pt-1 border-t border-white/15 text-[11px] text-blue-100 font-medium">
+          <span id="payout-remaining-count">Tarqatildi: 0/0 kishi</span>
+          <span id="payout-remaining-sum">Qolgan balans: 0 so'm</span>
+        </div>
       </div>
 
+      <!-- HALI OYLIK OLMAGAN XODIMLAR RO'YXATI YOKI YANGI OY TUGMASI -->
       <div id="payout-workers-list" class="space-y-3"></div>
 
       <!-- ARXIV -->
       <div class="pt-2 space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-gray-800">📂 Oyliklar Arxivi</h3>
+          <h3 id="archive-title" class="text-sm font-bold text-gray-800">📂 Oyliklar Arxivi</h3>
           <button onclick="exportArchiveCSV()" class="bg-emerald-600 active:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm">
             📥 Excel (CSV)
           </button>
@@ -163,7 +181,7 @@
     </section>
   </main>
 
-  <!-- PASTKI NAVIGATSIYA (ADMIN) -->
+  <!-- PASTKI NAVIGATSIYA -->
   <nav id="admin-bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-30">
     <div class="max-w-lg mx-auto grid grid-cols-3 gap-1">
       <button onclick="switchAdminTab('workers')" id="nav-workers" class="flex flex-col items-center py-1.5 rounded-xl text-blue-600 bg-blue-50/80 font-bold text-[11px]">
@@ -182,7 +200,7 @@
   <div id="modal-add-worker" class="fixed inset-0 bg-black/50 z-40 hidden items-end sm:items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-extrabold text-gray-900">➕ Yangi ishchi qo'shish</h3>
+        <h3 id="add-worker-modal-title" class="text-base font-extrabold text-gray-900">➕ Yangi ishchi qo'shish</h3>
         <button onclick="closeModals()" class="text-gray-400 text-lg font-bold">✕</button>
       </div>
       <div class="space-y-3">
@@ -230,6 +248,7 @@
       <div class="bg-blue-50 p-3 rounded-xl text-xs space-y-1 border border-blue-100">
         <p id="partial-worker-name" class="font-extrabold text-gray-900 text-sm"></p>
         <p id="partial-total-due" class="font-bold text-blue-700"></p>
+        <p class="text-[11px] font-semibold text-indigo-600">📅 Har oyning 1-sanasida oylik berish</p>
       </div>
       <input type="hidden" id="partial-worker-code" />
       <input type="hidden" id="partial-total-due-val" />
@@ -242,12 +261,12 @@
         Keyingi oyga o'tadi: 0 so'm
       </div>
       <button onclick="confirmPartialPayout()" class="w-full bg-blue-600 text-white font-bold text-sm py-3 rounded-xl">
-        ✅ Tasdiqlash va Keyingi oyga o'tkazish
+        ✅ Tasdiqlash va Ro'yxatdan chiqarish
       </button>
     </div>
   </div>
 
-  <!-- FIREBASE REALTIME SDK VA ADMIN LOGIKASI -->
+  <!-- FIREBASE REALTIME SDK VA MULTI-FILIAL LOGIKASI -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -259,9 +278,20 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const ADMIN_IDS = [1264738478, 7090331311]; // Dilshodbek va Anvar
+    const ADMIN_NAMES = {
+      1264738478: "Dilshodbek",
+      7090331311: "Anvar",
+      7035014220: "Abbos"
+    };
+
+    const BRANCH_LABELS = {
+      labzak: "Labzak",
+      qoraqamish: "Qoraqamish"
+    };
+
     let isAuthorized = true;
     let currentAdminName = "Dilshodbek";
+    let currentBranch = "labzak";
 
     const tg = window.Telegram?.WebApp;
     if (tg) {
@@ -269,10 +299,11 @@
       tg.expand();
       const tgUser = tg.initDataUnsafe?.user;
       if (tgUser) {
-        if (!ADMIN_IDS.includes(tgUser.id)) {
+        if (ADMIN_NAMES[tgUser.id]) {
+          currentAdminName = ADMIN_NAMES[tgUser.id];
+          if (tgUser.id === 7035014220) currentBranch = "qoraqamish";
+        } else {
           isAuthorized = false;
-        } else if (tgUser.id === 7090331311) {
-          currentAdminName = "Anvar";
         }
       }
     }
@@ -281,6 +312,7 @@
       document.getElementById('loading-screen').classList.add('hidden');
       document.getElementById('access-denied').classList.remove('hidden');
       document.getElementById('header-subtitle').textContent = "Ruxsat yo'q";
+      document.getElementById('branch-switcher').classList.add('hidden');
     }
 
     let state = {
@@ -299,6 +331,7 @@
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('admin-view').classList.remove('hidden');
         document.getElementById('admin-bottom-nav').classList.remove('hidden');
+        syncBranchSwitcherUI();
         renderAdmin();
       }
     }
@@ -323,17 +356,23 @@
       });
     }
 
+    function nowUz() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utc + (3600000 * 5));
+    }
+
     function fmt(num) {
       return Number(num || 0).toLocaleString('ru-RU');
     }
 
     function getTodayStr() {
-      const d = new Date();
+      const d = nowUz();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function getNowDateTimeStr() {
-      const d = new Date();
+      const d = nowUz();
       return `${getTodayStr()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
 
@@ -346,19 +385,13 @@
       return new Date(year, monthZeroIndexed + 1, 0).getDate();
     }
 
-    function getPayoutPeriodInfo() {
-      const now = new Date();
-      let year = now.getFullYear();
-      let month = now.getMonth();
-      if (now.getDate() <= 15) {
-        if (month === 0) { year -= 1; month = 11; }
-        else { month -= 1; }
-      }
-      const daysInPeriod = getDaysInMonth(year, month);
-      const pStart = new Date(year, month, 1);
-      const pEnd = new Date(year, month, daysInPeriod);
-      const label = `${year}-${String(month + 1).padStart(2, '0')}`;
-      return { label, pStart, pEnd, daysInPeriod };
+    function getCurrentPeriodLabel() {
+      const now = nowUz();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getWorkerBranch(w) {
+      return w?.branch || "labzak";
     }
 
     function calculateWorkedDays(startDateStr, pauses, periodStart, periodEnd) {
@@ -393,18 +426,15 @@
       const baseSalary = Number(w.salary || 0);
       const carryoverBalance = Number(w.carryover_balance || 0);
 
-      const now = new Date();
+      const now = nowUz();
       const daysInCurMonth = getDaysInMonth(now.getFullYear(), now.getMonth());
       const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+      // Bugungi kungacha ishlagan kunlari va yig'gan puli
       const curCalc = calculateWorkedDays(w.start_date, w.pauses, curMonthStart, todayDate);
       const percentCur = Number(((curCalc.worked / daysInCurMonth) * 100).toFixed(1));
       const earnedCur = Math.round((baseSalary / daysInCurMonth) * curCalc.worked);
-
-      const payoutInfo = getPayoutPeriodInfo();
-      const payCalc = calculateWorkedDays(w.start_date, w.pauses, payoutInfo.pStart, payoutInfo.pEnd);
-      const payoutEarned = Math.round((baseSalary / payoutInfo.daysInPeriod) * payCalc.worked);
 
       const txs = [];
       Object.entries(state.reports).forEach(([key, r]) => {
@@ -417,26 +447,28 @@
       const totalTaken = txs.filter(t => t.type === 'avans').reduce((s, t) => s + t.amount, 0);
       const totalBonus = txs.filter(t => t.type === 'bonus').reduce((s, t) => s + t.amount, 0);
 
+      // Shu kungacha yig'ilgan sof qoldiq
+      const currentBalance = (carryoverBalance + earnedCur + totalBonus) - totalTaken;
+
       return {
         code,
         name: w.name,
+        branch: getWorkerBranch(w),
         baseSalary,
         carryoverBalance,
         startDate: w.start_date || getTodayStr(),
         isPaused: Boolean(w.is_paused),
+        isPaidCurrent: Boolean(w.is_paid_current),
+        lastPaidAmount: Number(w.last_paid_amount || 0),
         tgUserId: w.tg_user_id,
         workedCur: curCalc.worked,
         pausedCur: curCalc.paused,
+        daysInCurMonth,
         percentCur,
         earnedCur,
-        workedPayout: payCalc.worked,
-        pausedPayout: payCalc.paused,
-        daysInPeriod: payoutInfo.daysInPeriod,
-        payoutEarned,
         totalTaken,
         totalBonus,
-        currentBalance: (carryoverBalance + earnedCur + totalBonus) - totalTaken,
-        fullPayoutBalance: (carryoverBalance + payoutEarned + totalBonus) - totalTaken,
+        currentBalance,
         transactions: txs
       };
     }
@@ -447,6 +479,24 @@
       el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 3200);
     }
+
+    function syncBranchSwitcherUI() {
+      const bLab = document.getElementById('br-btn-labzak');
+      const bQor = document.getElementById('br-btn-qoraqamish');
+      if (currentBranch === 'labzak') {
+        bLab.className = "py-1.5 rounded-lg text-xs font-extrabold bg-white text-blue-600 shadow-sm transition-all";
+        bQor.className = "py-1.5 rounded-lg text-xs font-bold text-gray-500 transition-all";
+      } else {
+        bQor.className = "py-1.5 rounded-lg text-xs font-extrabold bg-white text-blue-600 shadow-sm transition-all";
+        bLab.className = "py-1.5 rounded-lg text-xs font-bold text-gray-500 transition-all";
+      }
+    }
+
+    window.switchBranch = (branch) => {
+      currentBranch = branch;
+      syncBranchSwitcherUI();
+      renderAdmin();
+    };
 
     window.switchAdminTab = (tab) => {
       state.activeTab = tab;
@@ -462,6 +512,7 @@
     };
 
     window.openAddWorkerModal = () => {
+      document.getElementById('add-worker-modal-title').textContent = `➕ ${BRANCH_LABELS[currentBranch]} — Yangi ishchi`;
       document.getElementById('modal-add-worker').classList.remove('hidden');
       document.getElementById('modal-add-worker').classList.add('flex');
     };
@@ -480,13 +531,13 @@
       const s = getWorkerSummary(code);
       if (!s) return;
       document.getElementById('partial-worker-code').value = code;
-      document.getElementById('partial-total-due-val').value = s.fullPayoutBalance;
-      document.getElementById('partial-worker-name').textContent = `👤 ${s.name}`;
+      document.getElementById('partial-total-due-val').value = s.currentBalance;
+      document.getElementById('partial-worker-name').textContent = `👤 ${s.name} (${BRANCH_LABELS[s.branch]})`;
       document.getElementById('partial-total-due').textContent =
-        s.fullPayoutBalance >= 0
-          ? `Jami hisoblangan balans: +${fmt(s.fullPayoutBalance)} so'm`
-          : `Joriy qarzi: -${fmt(Math.abs(s.fullPayoutBalance))} so'm`;
-      document.getElementById('partial-paid-input').value = s.fullPayoutBalance > 0 ? '' : '0';
+        s.currentBalance >= 0
+          ? `Shu kungacha yig'ilgan balans: +${fmt(s.currentBalance)} so'm (${s.workedCur} kun)`
+          : `Shu kungacha qarzi: -${fmt(Math.abs(s.currentBalance))} so'm`;
+      document.getElementById('partial-paid-input').value = s.currentBalance > 0 ? '' : '0';
       updatePartialPreview();
       document.getElementById('modal-partial-payout').classList.remove('hidden');
       document.getElementById('modal-partial-payout').classList.add('flex');
@@ -531,10 +582,13 @@
       await set(ref(db, `workers/${code}`), {
         name,
         id_code: code,
+        branch: currentBranch,
         salary,
         carryover_balance: 0,
         start_date: getTodayStr(),
         is_paused: false,
+        is_paid_current: false,
+        last_paid_amount: 0,
         tg_user_id: null,
         pauses: []
       });
@@ -542,7 +596,7 @@
       document.getElementById('new-worker-name').value = '';
       document.getElementById('new-worker-salary').value = '';
       closeModals();
-      showToast(`✅ ${name} qo'shildi! ID: ${code}`);
+      showToast(`✅ ${name} (${BRANCH_LABELS[currentBranch]}) qo'shildi! ID: ${code}`);
     };
 
     window.saveEditedSalary = async () => {
@@ -615,8 +669,10 @@
         return;
       }
 
+      const w = state.workers[code];
       await push(ref(db, 'reports'), {
         worker_id_code: code,
+        branch: getWorkerBranch(w),
         amount,
         type: state.trType,
         note,
@@ -629,13 +685,14 @@
       showToast(`✅ ${fmt(amount)} so'm saqlandi!`);
     };
 
+    // SHU KUNGACHA ISHLAGAN PULI BO'YICHA OYLIKNI YOPISH
     async function finalizeWorkerPayout(code, paidNow) {
       const s = getWorkerSummary(code);
       if (!s) return;
 
-      const nextCarryover = s.fullPayoutBalance - paidNow;
-      const periodInfo = getPayoutPeriodInfo();
-      let noteText = `Oylik (${s.workedPayout} kun ishladi)`;
+      const nextCarryover = s.currentBalance - paidNow;
+      const periodLabel = getCurrentPeriodLabel();
+      let noteText = `Oylik (${s.workedCur} kun ishladi — ${getTodayStr()} gacha)`;
       if (nextCarryover > 0) {
         noteText += ` | Jamg'armaga o'tdi: +${fmt(nextCarryover)}`;
       } else if (nextCarryover < 0) {
@@ -645,13 +702,14 @@
       await push(ref(db, 'salary_archive'), {
         worker_id_code: code,
         worker_name: s.name,
+        branch: s.branch,
         base_salary: s.baseSalary,
         prev_carryover: s.carryoverBalance,
         total_bonus: s.totalBonus,
         total_taken: s.totalTaken,
         paid_amount: paidNow,
         next_carryover: nextCarryover,
-        period_month: periodInfo.label,
+        period_month: periodLabel,
         note: noteText,
         paid_date: getNowDateTimeStr()
       });
@@ -661,17 +719,19 @@
       }
 
       await update(ref(db, `workers/${code}`), {
-        carryover_balance: nextCarryover
+        carryover_balance: nextCarryover,
+        is_paid_current: true,
+        last_paid_amount: paidNow
       });
     }
 
     window.payFullWorker = async (code) => {
       const s = getWorkerSummary(code);
       if (!s) return;
-      const amountToPay = Math.max(0, s.fullPayoutBalance);
-      if (!confirm(`${s.name} uchun ${fmt(amountToPay)} so'm to'liq berilganini tasdiqlaysizmi?`)) return;
+      const amountToPay = Math.max(0, s.currentBalance);
+      if (!confirm(`${s.name} uchun shu kungacha ishlagan ${fmt(amountToPay)} so'm to'liq berilganini tasdiqlaysizmi?`)) return;
       await finalizeWorkerPayout(code, amountToPay);
-      showToast(`✅ ${s.name} oyligi to'liq yopildi!`);
+      showToast(`✅ ${s.name} shu kungacha ishlagan pulini oldi (${fmt(amountToPay)} so'm)!`);
     };
 
     window.confirmPartialPayout = async () => {
@@ -684,31 +744,65 @@
       const paidNow = Number(rawVal);
       await finalizeWorkerPayout(code, paidNow);
       closeModals();
-      showToast("✅ Saqlandi va qoldiq keyingi oyga o'tkazildi!");
+      showToast(`✅ Saqlandi (${fmt(paidNow)} so'm) va ro'yxatdan chiqarildi!`);
+    };
+
+    window.startNewMonthForBranch = async () => {
+      const branchTitle = BRANCH_LABELS[currentBranch];
+      if (!confirm(`${branchTitle} filiali uchun YANGI OYNI boshlaysizmi?\n\nBarcha xodimlarning ish sanasi bugundan (${getTodayStr()}) yangilanadi, jamg'arma va qarz qoldiqlari esa saqlanib qoladi.`)) return;
+
+      const today = getTodayStr();
+      const branchCodes = Object.keys(state.workers).filter(
+        code => getWorkerBranch(state.workers[code]) === currentBranch
+      );
+
+      for (const code of branchCodes) {
+        const w = state.workers[code];
+        const newPauses = w.is_paused ? [{ paused_at: today, resumed_at: null }] : [];
+        await update(ref(db, `workers/${code}`), {
+          is_paid_current: false,
+          last_paid_amount: 0,
+          start_date: today,
+          pauses: newPauses
+        });
+      }
+
+      showToast(`🔄 ${branchTitle} uchun yangi oy boshlandi!`);
     };
 
     window.exportArchiveCSV = () => {
-      const items = Object.values(state.archive);
+      const items = Object.values(state.archive).filter(i => i && (i.branch || 'labzak') === currentBranch);
       if (!items.length) {
-        showToast("📂 Arxiv bo'sh!");
+        showToast(`📂 ${BRANCH_LABELS[currentBranch]} arxivi bo'sh!`);
         return;
       }
-      let csv = "\uFEFFDavr,Xodim Ismi,100% Stavka,O'tgan Qoldiq,Bonus,Olingan Avans,Qo'liga Berildi,Keyingi Oyga O'tdi,Izoh,Sana\n";
+      let csv = "\uFEFFFilial,Davr,Xodim Ismi,100% Stavka,O'tgan Qoldiq,Bonus,Olingan Avans,Qo'liga Berildi,Keyingi Oyga O'tdi,Izoh,Sana\n";
       items.forEach(i => {
-        csv += `"${i.period_month || ''}","${i.worker_name || ''}",${i.base_salary || 0},${i.prev_carryover || 0},${i.total_bonus || 0},${i.total_taken || 0},${i.paid_amount || 0},${i.next_carryover || 0},"${i.note || ''}","${i.paid_date || ''}"\n`;
+        csv += `"${BRANCH_LABELS[i.branch || 'labzak']}","${i.period_month || ''}","${i.worker_name || ''}",${i.base_salary || 0},${i.prev_carryover || 0},${i.total_bonus || 0},${i.total_taken || 0},${i.paid_amount || 0},${i.next_carryover || 0},"${i.note || ''}","${i.paid_date || ''}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Oylik_Arxiv_${getTodayStr()}.csv`;
+      a.download = `Oylik_${BRANCH_LABELS[currentBranch]}_${getTodayStr()}.csv`;
       a.click();
     };
 
     function renderAdmin() {
+      const branchTitle = BRANCH_LABELS[currentBranch];
+      document.getElementById('header-title').textContent = `Oylik Nazorati • ${branchTitle}`;
       document.getElementById('header-subtitle').textContent = `${currentAdminName} • ${getTodayStr()}`;
-      const codes = Object.keys(state.workers);
-      let activeCnt = 0, pausedCnt = 0, totalEarned = 0;
+      document.getElementById('role-badge').textContent = `🏢 ${branchTitle}`;
+      document.getElementById('workers-list-title').textContent = `${branchTitle} xodimlari`;
+      document.getElementById('finance-title').textContent = `💸 ${branchTitle} — Pul berish`;
+      document.getElementById('payout-branch-label').textContent = `${branchTitle} • Oylik davri`;
+      document.getElementById('archive-title').textContent = `📂 ${branchTitle} Arxivi`;
+
+      const branchCodes = Object.keys(state.workers).filter(
+        code => getWorkerBranch(state.workers[code]) === currentBranch
+      );
+
+      let activeCnt = 0, pausedCnt = 0, totalPayableToday = 0;
       const listEl = document.getElementById('workers-list');
       const selectEl = document.getElementById('tr-worker-select');
       const prevSelectVal = selectEl.value;
@@ -716,14 +810,14 @@
       listEl.innerHTML = '';
       selectEl.innerHTML = '';
 
-      if (codes.length === 0) {
-        listEl.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-xs text-gray-500">Hozircha ishchilar yo'q. "Yangi ishchi" tugmasini bosing.</div>`;
+      if (branchCodes.length === 0) {
+        listEl.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-xs text-gray-500">${branchTitle} filialida hozircha ishchilar yo'q. "Yangi ishchi" tugmasini bosing.</div>`;
       }
 
-      codes.forEach(code => {
+      branchCodes.forEach(code => {
         const s = getWorkerSummary(code);
         if (s.isPaused) pausedCnt++; else activeCnt++;
-        totalEarned += s.earnedCur;
+        if (s.currentBalance > 0) totalPayableToday += s.currentBalance;
 
         const opt = document.createElement('option');
         opt.value = code;
@@ -740,6 +834,10 @@
           carryBadge = `<span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-100">⚠️ O'tgan qarz: -${fmt(Math.abs(s.carryoverBalance))}</span>`;
         }
 
+        const paidBadge = s.isPaidCurrent
+          ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700">✅ Oylik olgan (${fmt(s.lastPaidAmount)})</span>`
+          : '';
+
         listEl.innerHTML += `
           <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-3">
             <div class="flex items-start justify-between">
@@ -749,6 +847,7 @@
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${s.isPaused ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
                     ${s.isPaused ? '⏸ Pauzada' : '🟢 Ishlayapti'}
                   </span>
+                  ${paidBadge}
                   <span title="Telegram bildirishnoma">${s.tgUserId ? '🔔' : '🔕'}</span>
                 </div>
                 <p class="text-[11px] text-gray-500 mt-0.5">ID: <b class="text-gray-700 select-all">${code}</b> • Boshlagan: ${s.startDate}</p>
@@ -785,15 +884,15 @@
         `;
       });
 
-      if (prevSelectVal && state.workers[prevSelectVal]) selectEl.value = prevSelectVal;
+      if (prevSelectVal && branchCodes.includes(prevSelectVal)) selectEl.value = prevSelectVal;
 
       document.getElementById('stat-active').textContent = `${activeCnt} ta`;
       document.getElementById('stat-paused').textContent = `${pausedCnt} ta`;
-      document.getElementById('stat-earned-total').textContent = `${fmt(totalEarned)} so'm`;
+      document.getElementById('stat-earned-total').textContent = `${fmt(totalPayableToday)} so'm`;
 
       const recentEl = document.getElementById('recent-transactions-list');
       const allOpenTxs = Object.values(state.reports)
-        .filter(r => r && !r.is_archived)
+        .filter(r => r && !r.is_archived && branchCodes.includes(r.worker_id_code))
         .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
         .slice(0, 10);
 
@@ -814,51 +913,92 @@
         `;
       });
 
-      const pInfo = getPayoutPeriodInfo();
-      document.getElementById('payout-period-title').textContent = `${pInfo.label} (${pInfo.daysInPeriod} kunlik oy)`;
+      // OYLIK TARQATISH: SHU KUNGACHA YIG'GAN PULI + HAR OYNING 1-SANASI ESLATMASI
+      document.getElementById('payout-period-title').textContent = `${getCurrentPeriodLabel()} (${getTodayStr()} gacha)`;
       const payoutListEl = document.getElementById('payout-workers-list');
       payoutListEl.innerHTML = '';
-      let grandPayout = 0;
 
-      codes.forEach(code => {
-        const s = getWorkerSummary(code);
-        if (s.fullPayoutBalance > 0) grandPayout += s.fullPayoutBalance;
+      let remainingPayoutSum = 0;
+      let totalSpentInPayout = 0;
 
-        let carryText = '';
-        if (s.carryoverBalance > 0) carryText = ` • Jamg'arma: +${fmt(s.carryoverBalance)}`;
-        else if (s.carryoverBalance < 0) carryText = ` • O'tgan qarz: -${fmt(Math.abs(s.carryoverBalance))}`;
+      branchCodes.forEach(code => {
+        const w = state.workers[code];
+        if (w?.is_paid_current) {
+          totalSpentInPayout += Number(w.last_paid_amount || 0);
+        }
+      });
 
-        payoutListEl.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-2.5">
-            <div>
-              <p class="text-sm font-extrabold text-gray-900">${s.name}</p>
-              <p class="text-[11px] text-gray-500">Ishladi: ${s.workedPayout}/${s.daysInPeriod} kun • Olgan: ${fmt(s.totalTaken)}${carryText}</p>
-              <p class="text-xs font-extrabold ${s.fullPayoutBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-1">
-                ${s.fullPayoutBalance >= 0 ? `Jami sof balans: +${fmt(s.fullPayoutBalance)} so'm` : `Qarzi bor: -${fmt(Math.abs(s.fullPayoutBalance))} so'm`}
-              </p>
-            </div>
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              ${s.fullPayoutBalance > 0 ? `
-                <button onclick="payFullWorker('${code}')" class="bg-blue-600 active:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl">
-                  💵 To'liq (${fmt(s.fullPayoutBalance)})
-                </button>
-              ` : `
-                <button disabled class="bg-gray-100 text-gray-400 text-xs font-bold py-2 rounded-xl">
-                  💵 To'liq (0)
-                </button>
-              `}
-              <button onclick="openPartialPayoutModal('${code}')" class="bg-indigo-50 active:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold py-2 rounded-xl">
-                💰 Qisman / Jamg'arma
-              </button>
-            </div>
+      const unpaidCodes = branchCodes.filter(code => !state.workers[code]?.is_paid_current);
+      const paidCount = branchCodes.length - unpaidCodes.length;
+
+      if (branchCodes.length > 0 && unpaidCodes.length === 0) {
+        payoutListEl.innerHTML = `
+          <div class="bg-white p-5 rounded-2xl card-shadow border border-emerald-200 text-center space-y-3">
+            <div class="text-3xl">🎉</div>
+            <h3 class="text-sm font-extrabold text-gray-900">Barcha xodimlarga oylik tarqatildi!</h3>
+            <p class="text-xs text-gray-500 leading-relaxed">
+              ${branchTitle} filialida jami <b>${fmt(totalSpentInPayout)} so'm</b> oylik tarqatildi. Keyingi oy hisob-kitobini ochish uchun tugmani bosing:
+            </p>
+            <button onclick="startNewMonthForBranch()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-extrabold text-sm py-3 rounded-xl shadow-sm">
+              🔄 Yangi oyni boshlash
+            </button>
           </div>
         `;
-      });
-      document.getElementById('payout-total-sum').textContent = `${fmt(grandPayout)} so'm`;
+      } else {
+        unpaidCodes.forEach((code, idx) => {
+          const s = getWorkerSummary(code);
+          if (s.currentBalance > 0) remainingPayoutSum += s.currentBalance;
+
+          let carryText = '';
+          if (s.carryoverBalance > 0) carryText = ` • Jamg'arma: +${fmt(s.carryoverBalance)}`;
+          else if (s.carryoverBalance < 0) carryText = ` • O'tgan qarz: -${fmt(Math.abs(s.carryoverBalance))}`;
+
+          payoutListEl.innerHTML += `
+            <div class="bg-white p-4 rounded-2xl card-shadow border border-gray-100 space-y-2.5">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <p class="text-sm font-extrabold text-gray-900">${idx + 1}. ${s.name}</p>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
+                    📅 Har oyning 1-sanasida oylik berish
+                  </span>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">
+                  Shu kungacha ishladi: <b>${s.workedCur} kun</b> • Yig'ilgan: <b>${fmt(s.earnedCur)}</b> • Olgan: ${fmt(s.totalTaken)}${carryText}
+                </p>
+                <p class="text-xs font-extrabold ${s.currentBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-1">
+                  ${s.currentBalance >= 0 ? `Shu kungacha sof balans: +${fmt(s.currentBalance)} so'm` : `Shu kungacha qarzi: -${fmt(Math.abs(s.currentBalance))} so'm`}
+                </p>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                ${s.currentBalance > 0 ? `
+                  <button onclick="payFullWorker('${code}')" class="bg-blue-600 active:bg-blue-700 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl leading-tight">
+                    💵 To'liq (shu kungacha): ${fmt(s.currentBalance)}
+                  </button>
+                ` : `
+                  <button disabled class="bg-gray-100 text-gray-400 text-[11px] font-bold py-2.5 px-2 rounded-xl">
+                    💵 To'liq (shu kungacha): 0
+                  </button>
+                `}
+                <button onclick="openPartialPayoutModal('${code}')" class="bg-indigo-50 active:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold py-2.5 px-2 rounded-xl">
+                  💰 Qisman / Jamg'arma
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('payout-total-sum').textContent = `${fmt(totalSpentInPayout)} so'm`;
+      document.getElementById('payout-remaining-count').textContent =
+        branchCodes.length > 0 ? `Tarqatildi: ${paidCount}/${branchCodes.length} kishi` : `Xodimlar yo'q`;
+      document.getElementById('payout-remaining-sum').textContent = `Qolgan balans: ${fmt(remainingPayoutSum)} so'm`;
 
       const archEl = document.getElementById('archive-list');
-      const archItems = Object.values(state.archive).sort((a, b) => (b.paid_date || '').localeCompare(a.paid_date || ''));
-      archEl.innerHTML = archItems.length ? '' : `<div class="bg-white p-4 rounded-2xl text-center text-xs text-gray-400">Arxivda yozuvlar yo'q</div>`;
+      const archItems = Object.values(state.archive)
+        .filter(i => i && (i.branch || 'labzak') === currentBranch)
+        .sort((a, b) => (b.paid_date || '').localeCompare(a.paid_date || ''));
+
+      archEl.innerHTML = archItems.length ? '' : `<div class="bg-white p-4 rounded-2xl text-center text-xs text-gray-400">${branchTitle} arxivida yozuvlar yo'q</div>`;
       archItems.forEach(item => {
         archEl.innerHTML += `
           <div class="bg-white p-3.5 rounded-2xl card-shadow border border-gray-100 text-xs space-y-1">
